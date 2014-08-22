@@ -98,8 +98,7 @@ namespace algorithm {
         return history.empty() ? 0 : history.back().n;
       };
 
-      //const double delay = 0.1;
-      const double delay = 0;
+      const double delay = 0.1;
 
       uint64_t S = sW.data()[0];
       uint64_t Smax = S + Snew;

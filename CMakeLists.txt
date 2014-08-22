@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.0)
-project (visaw-triangular)
+project (visaw-triangular-only-three)
 
 set(Boost_USE_STATIC_LIBS    on) 
 set(Boost_USE_STATIC_RUNTIME on)

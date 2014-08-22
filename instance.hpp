@@ -38,7 +38,7 @@ struct instance
   using random_generator_type = std::mt19937;
   random_generator_type rng;
 
-  static const int num_flatperm_indices = 3;
+  static const int num_flatperm_indices = 2;
   using flatperm_type = algorithm::flatperm<num_flatperm_indices, random_generator_type>;
   flatperm_type flatperm;
 
@@ -51,7 +51,7 @@ struct instance
   my_array<long double, num_flatperm_indices> Re2W, Rg2W, Rm2W;
 
   boost::posix_time::ptime start_time;
-  std::ofstream debug;
+  // std::ofstream debug;
 
   //////////////////////////////////////////////////////////////////////
 
@@ -60,14 +60,14 @@ struct instance
     // initialise flatperm and pass the indices limits
     // of course to accommodate both length 0 and length N, the index must be
     // able to take N+1 possible values
-    , flatperm({N+1, N/2+1, N/3+1}, mu, rng)
+    , flatperm({N+1, N/3+1}, mu, rng)
     , walk(N)
     , samples(0)
     // initialise out histogram with the dimensions as the flatperm histograms
     , Re2W{flatperm.extents}
     , Rg2W{flatperm.extents}
     , Rm2W{flatperm.extents}
-    , debug("debug.txt")
+    // , debug("debug.txt")
   {
   }
 
@@ -140,8 +140,7 @@ struct instance
     multiplicity.register_step(walk);
 
     flatperm.indices[0] = walk.size();
-    flatperm.indices[1] = multiplicity.get<2>();
-    flatperm.indices[2] = multiplicity.get<3>();
+    flatperm.indices[1] = multiplicity.get<3>();
 
     auto const n = walk.size();
 
@@ -168,11 +167,11 @@ struct instance
 //       abort();
 //     }
 
-    if (n == N) {
-      for (auto k : flatperm.indices)
-        debug << k << " ";
-      debug << walk << "\n";
-    }
+//     if (n == N) {
+//       for (auto k : flatperm.indices)
+//         debug << k << " ";
+//       debug << walk << "\n";
+//     }
   }
 
   void unregister_step()
@@ -182,8 +181,7 @@ struct instance
     walk.unregister_step();
 
     flatperm.indices[0] = walk.size();
-    flatperm.indices[1] = multiplicity.get<2>();
-    flatperm.indices[2] = multiplicity.get<3>();
+    flatperm.indices[1] = multiplicity.get<3>();
   }
 
   void run(unsigned int S) {
