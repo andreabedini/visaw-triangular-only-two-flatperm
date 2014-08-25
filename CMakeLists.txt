@@ -1,7 +1,7 @@
-cmake_minimum_required(VERSION 3.0)
+cmake_minimum_required(VERSION 2.8)
 project (visaw-triangular-only-three)
 
-set(Boost_USE_STATIC_LIBS    on) 
+set(Boost_USE_STATIC_LIBS    on)
 set(Boost_USE_STATIC_RUNTIME on)
 find_package(Boost REQUIRED COMPONENTS date_time program_options system thread)
 
@@ -16,4 +16,8 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR} ${Boost_INCLUDE_DIRS} ${HDF5_INC
 
 add_executable(main main.cpp)
 target_link_libraries(main ${Boost_LIBRARIES} ${HDF5_LIBRARIES})
+
+if (CMAKE_HOST_UNIX)
+  target_link_libraries(main pthread dl)
+endif (CMAKE_HOST_UNIX)
 
