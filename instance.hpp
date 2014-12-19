@@ -50,11 +50,12 @@ struct instance
   features::multiplicity<walk_type> multiplicity;
   my_array<long double, num_flatperm_indices> Re2W, Rg2W, Rm2W;
 
+  my_array<long double, num_flatperm_indices - 1> sampled_weights;
+  my_array<int, num_flatperm_indices + 1> sampled_walks;
+
   boost::posix_time::ptime start_time;
-  // std::ofstream debug;
 
   //////////////////////////////////////////////////////////////////////
-
   instance(unsigned int N, double mu)
     : N(N), mu(mu)
     // initialise flatperm and pass the indices limits
@@ -67,7 +68,8 @@ struct instance
     , Re2W{flatperm.extents}
     , Rg2W{flatperm.extents}
     , Rm2W{flatperm.extents}
-    // , debug("debug.txt")
+    , sampled_weights({flatperm.extents[1]})
+    , sampled_walks  ({flatperm.extents[1], flatperm.extents[0], 2})
   {
   }
 
@@ -98,10 +100,10 @@ struct instance
     uint64_t tours = flatperm.Sn.data()[0];
 
     std::cerr << "check point at time " << now << "\n"
-	      << tours << " tours "
-	      << " (" << (double) tours / seconds << " tours/sec) "
-	      << samples << " samples"
-	      << " (" << (double) samples / seconds << " samples/sec)\n";
+        << tours << " tours "
+        << " (" << (double) tours / seconds << " tours/sec) "
+        << samples << " samples"
+        << " (" << (double) samples / seconds << " samples/sec)\n";
   }
 
   void save(hdf5::handle loc) const
@@ -118,12 +120,15 @@ struct instance
     std::cerr << "saving supplementary histograms: ";
     std::cerr << "Re2W, "; hdf5::save(loc, Re2W, "Re2W");
     std::cerr << "Rg2W, "; hdf5::save(loc, Rg2W, "Rg2W");
-    std::cerr << "Rm2W\n"; hdf5::save(loc, Rm2W, "Rm2W");
+    std::cerr << "Rm2W, "; hdf5::save(loc, Rm2W, "Rm2W");
 
     auto const now = boost::posix_time::second_clock::local_time();
 
     std::string const time_str = to_simple_string(now);
     H5LTset_attribute_string(loc.getId(), ".", "time", time_str.c_str());
+
+    std::cerr << "walks, "; hdf5::save(loc, sampled_walks, "sampled_walks");
+    std::cerr << "weights\n"; hdf5::save(loc, sampled_weights, "sampled_weights");
   }
 
   std::vector<point> atmosphere() const
@@ -131,7 +136,15 @@ struct instance
     return walk.atmosphere();
   }
 
-  void register_step(point x, long double& W)
+  //
+  // Register a new step
+  //
+  // This is called from flatperm each time a new step has been decided.
+  // This function must add that step to the walk, register it with any
+  // counters and/or observables, and update the flatperm indices.
+  // This function can also correct the weight of the sample.
+  //
+  void register_step(point const& x, long double& W)
   {
     samples ++;
 
@@ -157,21 +170,18 @@ struct instance
     Rg2W(flatperm.indices) += W * Rg2;
     Rm2W(flatperm.indices) += W * Rm2;
 
-//     std::cerr << n << " "
-//       << multiplicity.get<1>() << " "
-//       << multiplicity.get<2>() << " "
-//       << multiplicity.get<3>() << "\n";
-//
-//     if(! (n == multiplicity.get<1>() + 2*multiplicity.get<2>() + 3*multiplicity.get<3>())) {
-//       std::cerr << walk;
-//       abort();
-//     }
-
-//     if (n == N) {
-//       for (auto k : flatperm.indices)
-//         debug << k << " ";
-//       debug << walk << "\n";
-//     }
+    if (n == N) {
+      auto m = flatperm.indices[1];
+      if (W > sampled_weights[m]) {
+        sampled_weights[m] = W;
+        int i = 0;
+        for(auto const& xy : walk) {
+          sampled_walks[m][i][0] = xy[0];
+          sampled_walks[m][i][1] = xy[1];
+          i += 1;
+        }
+      }
+    }
   }
 
   void unregister_step()

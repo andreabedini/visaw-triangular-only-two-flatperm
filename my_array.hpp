@@ -33,12 +33,28 @@ private:
 
     operator reference() { return array.__data[offset]; }
 
+    template<typename T>
+    reference operator=(T const& t) {
+      return array.__data[offset] = t;
+    }
+
     helper<I + 1> operator[](size_t i) const {
       return helper<I + 1>{array, i + array.__extents[I] * offset};
     }
   };
 
 public:
+  my_array()
+  {
+    std::fill(std::begin(__extents), std::end(__extents), 0);
+  }
+
+  my_array(std::initializer_list<unsigned int> extents)
+  {
+    std::copy_n(std::begin(extents), NumDims, std::begin(__extents));
+    __data.resize(num_elements());
+  }
+
   template<typename ExtentList>
   my_array(ExtentList const& extents)
   {
