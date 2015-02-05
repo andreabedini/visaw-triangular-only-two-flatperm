@@ -61,7 +61,7 @@ struct instance
     // initialise flatperm and pass the indices limits
     // of course to accommodate both length 0 and length N, the index must be
     // able to take N+1 possible values
-    , flatperm({N+1, N/3+1}, mu, rng)
+    , flatperm({N+1, N/2+1}, mu, rng)
     , walk(N)
     , samples(0)
     // initialise out histogram with the dimensions as the flatperm histograms
@@ -153,7 +153,7 @@ struct instance
     multiplicity.register_step(walk);
 
     flatperm.indices[0] = walk.size();
-    flatperm.indices[1] = multiplicity.get<3>();
+    flatperm.indices[1] = multiplicity.get<2>();
 
     auto const n = walk.size();
 
@@ -191,7 +191,7 @@ struct instance
     walk.unregister_step();
 
     flatperm.indices[0] = walk.size();
-    flatperm.indices[1] = multiplicity.get<3>();
+    flatperm.indices[1] = multiplicity.get<2>();
   }
 
   void run(unsigned int S) {
